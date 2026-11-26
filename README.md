@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Bysykkel og vær – datasteget
 
 Antall utlån per stasjon per time i Oslo Bysykkel (april–oktober 2025), med været fra Blindern koblet på.
@@ -49,3 +50,6 @@ Dette tar noen minutter første gang. Filer som allerede er lastet ned, hentes i
 - Turdata: Oslo Bysykkel, åpne data (NLOD). https://oslobysykkel.no/apne-data/historisk
 - Vær: Meteorologisk institutt, Frost API (CC BY 4.0). https://frost.met.no
 - Data lagres ikke på GitHub. Kjør skriptene for å hente dem.
+=======
+# CAU-Business-Intelligence-2026
+>>>>>>> c5aff7df21fec00f2240a764bba8e5d048285738
