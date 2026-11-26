@@ -1,36 +1,36 @@
-# Datasjekk – bysykkel og vær (april–oktober 2025)
+# Data check – bike trips and weather (April–October 2025)
 
-## Turdata
-- Rader i rådata (7 filer): 957,132
-- Duplikater fjernet: 1
-- Rader uten starttid eller startstasjon (fjernet): 0
-- Turer utenfor perioden (norsk tid, fjernet): 78
-- Rader igjen: 957,053
-- Rare turer (beholdt): slutt før start 0, varighet ≤ 0 s 0, over 24 t 0
+## Trip data
+- Rows in raw data (7 files): 957,132
+- Duplicates removed: 1
+- Rows without start time or start station (removed): 0
+- Trips outside the period (Norwegian time, removed): 78
+- Rows left: 957,053
+- Strange trips (kept): ended before start 0, duration ≤ 0 s 0, over 24 h 0
 
-Manglende verdier per kolonne i rådata:
+Missing values per column in the raw data:
 
 - start_station_description: 38
 - end_station_description: 38
 
-## Tidssone
-- Eksempel på tid i fila: `2025-04-01 03:00:05.647000+00:00`
-- Andel tider merket som UTC (+00:00): 100.0%
-- Alle tider er gjort om til norsk tid (Europe/Oslo), med sommertid.
-- Vanligste starttimer på hverdager (norsk tid): [16, 8, 17] (bør ligge rundt morgen- og ettermiddagsrush hvis tidssonen er riktig)
-- Sommertid slutter 26. oktober: klokka 02–03 kommer to ganger den natta. Turer den dagen: 2,064. Derfor kobler vi tur og vær på UTC-time, ikke norsk klokkeslett.
+## Time zone
+- Example time in the file: `2025-04-01 03:00:05.647000+00:00`
+- Share of times marked as UTC (+00:00): 100.0%
+- All times are converted to Norwegian time (Europe/Oslo), including summer time.
+- Most common start hours on weekdays (Norwegian time): [16, 8, 17] (should match morning and afternoon rush if the time zone is right)
+- Summer time ends on 26 October: 02:00–03:00 happens twice that night. Trips that day: 2,064. That is why trips and weather are joined on the UTC hour, not Norwegian clock time.
 
-## Stasjoner
-- Antall stasjoner (start eller slutt): 271
-- Stasjoner med mer enn ett navn: 0
-- Stasjoner med under 10 utlån i hele perioden: 0
-- Stasjoner som bare finnes som sluttstasjon: 0
-- Stasjoner som ikke er i bruk hele perioden (første tur etter 8. april eller siste før 24. oktober): 25
-- Full liste: reports/stations.csv
+## Stations
+- Number of stations (start or end): 271
+- Stations with more than one name: 0
+- Stations with fewer than 10 departures in the whole period: 0
+- Stations that only appear as end station: 0
+- Stations not in use for the whole period (first trip after 8 April or last trip before 24 October): 25
+- Full list: reports/stations.csv
 
-## Vær (Blindern SN18700)
-- Timer i perioden: 5,137
-- Duplikater: 5184
-- Manglende timer før utfylling: temperature_c 0, precipitation_mm 0, wind_speed_ms 0
-- Manglende timer etter utfylling (hull på maks 3 t i temperatur og vind): temperature_c 0, precipitation_mm 0, wind_speed_ms 0
-- Frost leverer tider i UTC; de gjøres om til norsk tid i tabellen.
+## Weather (Blindern SN18700)
+- Hours in the period: 5,137
+- Extra values for the same hour (two temperature sensors at Blindern, averaged): 5184
+- Missing hours before filling: temperature_c 0, precipitation_mm 0, wind_speed_ms 0
+- Missing hours after filling (gaps of max 3 h in temperature and wind): temperature_c 0, precipitation_mm 0, wind_speed_ms 0
+- Frost gives times in UTC; they are converted to Norwegian time in the table.

@@ -1,4 +1,4 @@
-"""Kjør hele datasteget i rekkefølge: last ned turer, last ned vær, sjekk, bygg tabell."""
+"""Run the whole data step in order: download trips, download weather, check, build table."""
 import runpy
 import sys
 from pathlib import Path

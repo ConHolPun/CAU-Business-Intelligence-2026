@@ -1,16 +1,11 @@
+# Secrets
+.env
+
+# Data (too large for GitHub – download it with run_all.py)
 data/
-.env
-__pycache__/
-.ipynb_checkpoints/
-.DS_Store
-# Hemmeligheter
-.env
 
-# Data (for store for GitHub – lastes ned med skriptene)
-data/raw/**
-data/processed/**
-!data/**/.gitkeep
-
+# Python
+.venv/
 __pycache__/
 .ipynb_checkpoints/
 .DS_Store

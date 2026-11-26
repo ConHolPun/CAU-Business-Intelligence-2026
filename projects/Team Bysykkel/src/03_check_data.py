@@ -1,13 +1,13 @@
-"""Steg 3: Sjekk dataene.
+"""Step 3: Check the data.
 
-Ser på duplikater, manglende verdier, tidssone og hvilke stasjoner som finnes.
-Skriver resultatet til:
-  reports/data_check.md   (kort rapport)
-  reports/stations.csv    (alle stasjoner med navn, posisjon og antall turer)
+Looks at duplicates, missing values, time zone and which stations exist.
+Writes the result to:
+  reports/data_check.md   (short report)
+  reports/stations.csv    (all stations with name, location and number of trips)
 """
 import pandas as pd
 
-from config import REPORTS_DIR
+from config import LOCAL_TZ, REPORTS_DIR
 from prep import clean_trips, clean_weather, read_raw_trips, read_weather_raw
 
 
@@ -38,15 +38,17 @@ def main():
     raw = read_raw_trips()
     trips, t = clean_trips(raw)
 
-    # Tidssone-sjekk
+    # Time zone check
     sample = raw["started_at"].astype(str)
     share_utc = sample.str.endswith("+00:00").mean()
-    weekday = trips[trips["started_at_local"].dt.dayofweek < 5]
+    weekday = trips[trips["started_at_local"].dt.day_of_week < 5]
     peak_hours = weekday["started_at_local"].dt.hour.value_counts().head(3).index.tolist()
     dst_day = trips[trips["started_at_local"].dt.date == pd.Timestamp("2025-10-26").date()]
 
     stations = station_overview(trips)
     stations.to_csv(REPORTS_DIR / "stations.csv")
+    not_full_period = ((stations["first_seen"] > pd.Timestamp("2025-04-08", tz=LOCAL_TZ))
+                       | (stations["last_seen"] < pd.Timestamp("2025-10-24", tz=LOCAL_TZ))).sum()
 
     missing = raw.isna().sum()
     missing = missing[missing > 0]
@@ -55,46 +57,46 @@ def main():
     weather, w = clean_weather(weather_raw)
 
     lines = [
-        "# Datasjekk – bysykkel og vær (april–oktober 2025)",
+        "# Data check – bike trips and weather (April–October 2025)",
         "",
-        "## Turdata",
-        f"- Rader i rådata (7 filer): {t['rows_raw']:,}",
-        f"- Duplikater fjernet: {t['duplicates']:,}",
-        f"- Rader uten starttid eller startstasjon (fjernet): {t['missing_needed']:,}",
-        f"- Turer utenfor perioden (norsk tid, fjernet): {t['outside_period']:,}",
-        f"- Rader igjen: {t['rows_clean']:,}",
-        f"- Rare turer (beholdt): slutt før start {t['ended_before_started']}, "
-        f"varighet ≤ 0 s {t['duration_le_0']}, over 24 t {t['duration_over_24h']}",
+        "## Trip data",
+        f"- Rows in raw data (7 files): {t['rows_raw']:,}",
+        f"- Duplicates removed: {t['duplicates']:,}",
+        f"- Rows without start time or start station (removed): {t['missing_needed']:,}",
+        f"- Trips outside the period (Norwegian time, removed): {t['outside_period']:,}",
+        f"- Rows left: {t['rows_clean']:,}",
+        f"- Strange trips (kept): ended before start {t['ended_before_started']}, "
+        f"duration ≤ 0 s {t['duration_le_0']}, over 24 h {t['duration_over_24h']}",
         "",
-        "Manglende verdier per kolonne i rådata:",
-        "" if len(missing) else "- Ingen",
+        "Missing values per column in the raw data:",
+        "" if len(missing) else "- None",
         *[f"- {col}: {n:,}" for col, n in missing.items()],
         "",
-        "## Tidssone",
-        f"- Eksempel på tid i fila: `{sample.iloc[0]}`",
-        f"- Andel tider merket som UTC (+00:00): {share_utc:.1%}",
-        "- Alle tider er gjort om til norsk tid (Europe/Oslo), med sommertid.",
-        f"- Vanligste starttimer på hverdager (norsk tid): {peak_hours} "
-        "(bør ligge rundt morgen- og ettermiddagsrush hvis tidssonen er riktig)",
-        f"- Sommertid slutter 26. oktober: klokka 02–03 kommer to ganger den natta. "
-        f"Turer den dagen: {len(dst_day):,}. Derfor kobler vi tur og vær på UTC-time, ikke norsk klokkeslett.",
+        "## Time zone",
+        f"- Example time in the file: `{sample.iloc[0]}`",
+        f"- Share of times marked as UTC (+00:00): {share_utc:.1%}",
+        "- All times are converted to Norwegian time (Europe/Oslo), including summer time.",
+        f"- Most common start hours on weekdays (Norwegian time): {peak_hours} "
+        "(should match morning and afternoon rush if the time zone is right)",
+        f"- Summer time ends on 26 October: 02:00–03:00 happens twice that night. "
+        f"Trips that day: {len(dst_day):,}. That is why trips and weather are joined on the UTC hour, not Norwegian clock time.",
         "",
-        "## Stasjoner",
-        f"- Antall stasjoner (start eller slutt): {len(stations)}",
-        f"- Stasjoner med mer enn ett navn: {(stations['n_names'] > 1).sum()}",
-        f"- Stasjoner med under 10 utlån i hele perioden: {(stations['departures'] < 10).sum()}",
-        f"- Stasjoner som bare finnes som sluttstasjon: {(stations['departures'] == 0).sum()}",
-        f"- Stasjoner som ikke er i bruk hele perioden (første tur etter 8. april eller siste før 24. oktober): "
-        f"{((stations['first_seen'] > pd.Timestamp('2025-04-08', tz='Europe/Oslo')) | (stations['last_seen'] < pd.Timestamp('2025-10-24', tz='Europe/Oslo'))).sum()}",
-        "- Full liste: reports/stations.csv",
+        "## Stations",
+        f"- Number of stations (start or end): {len(stations)}",
+        f"- Stations with more than one name: {(stations['n_names'] > 1).sum()}",
+        f"- Stations with fewer than 10 departures in the whole period: {(stations['departures'] < 10).sum()}",
+        f"- Stations that only appear as end station: {(stations['departures'] == 0).sum()}",
+        f"- Stations not in use for the whole period (first trip after 8 April or last trip before 24 October): "
+        f"{not_full_period}",
+        "- Full list: reports/stations.csv",
         "",
-        "## Vær (Blindern SN18700)",
-        f"- Timer i perioden: {w['hours_total']:,}",
-        f"- Duplikater: {w['duplicates']}",
-        "- Manglende timer før utfylling: " + ", ".join(f"{k} {v}" for k, v in w["missing_before_fill"].items()),
-        "- Manglende timer etter utfylling (hull på maks 3 t i temperatur og vind): "
+        "## Weather (Blindern SN18700)",
+        f"- Hours in the period: {w['hours_total']:,}",
+        f"- Extra values for the same hour (two temperature sensors at Blindern, averaged): {w['duplicates']}",
+        "- Missing hours before filling: " + ", ".join(f"{k} {v}" for k, v in w["missing_before_fill"].items()),
+        "- Missing hours after filling (gaps of max 3 h in temperature and wind): "
         + ", ".join(f"{k} {v}" for k, v in w["missing_after_fill"].items()),
-        "- Frost leverer tider i UTC; de gjøres om til norsk tid i tabellen.",
+        "- Frost gives times in UTC; they are converted to Norwegian time in the table.",
     ]
     report = "\n".join(lines)
     (REPORTS_DIR / "data_check.md").write_text(report)

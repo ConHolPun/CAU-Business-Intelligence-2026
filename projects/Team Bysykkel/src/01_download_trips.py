@@ -1,7 +1,7 @@
-"""Steg 1: Last ned turdata fra Oslo Bysykkel (april–oktober 2025).
+"""Step 1: Download trip data from Oslo Bysykkel (April–October 2025).
 
-Filene lagres i data/raw/trips/2025-04.csv osv.
-Filer som allerede finnes, lastes ikke ned på nytt.
+Files are saved as data/raw/trips/2025-04.csv etc.
+Files that already exist are not downloaded again.
 """
 import requests
 
@@ -13,14 +13,14 @@ def main():
     for month in TRIP_MONTHS:
         target = TRIPS_DIR / f"2025-{month}.csv"
         if target.exists() and target.stat().st_size > 0:
-            print(f"Finnes allerede: {target.name}")
+            print(f"Already exists: {target.name}")
             continue
         url = TRIP_URL.format(month=month)
-        print(f"Laster ned {url}")
+        print(f"Downloading {url}")
         response = requests.get(url, timeout=120)
         response.raise_for_status()
         target.write_bytes(response.content)
-        print(f"  lagret {target.name} ({len(response.content) / 1e6:.1f} MB)")
+        print(f"  saved {target.name} ({len(response.content) / 1e6:.1f} MB)")
 
 
 if __name__ == "__main__":

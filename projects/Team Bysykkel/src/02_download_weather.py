@@ -1,9 +1,9 @@
-"""Steg 2: Hent timevis vær fra Frost (MET) for Oslo Blindern (SN18700).
+"""Step 2: Get hourly weather from Frost (MET Norway) for Oslo Blindern (SN18700).
 
-Krever FROST_CLIENT_ID i .env-fila i prosjektmappa.
-Henter én måned om gangen og lagrer:
-  data/raw/weather/frost_SN18700_2025-04.json  (rådata, slik Frost sender den)
-  data/raw/weather/weather_hourly_raw.csv      (alle observasjoner i én tabell, UTC)
+Needs FROST_CLIENT_ID in the .env file in the project folder.
+Gets one month at a time and saves:
+  data/raw/weather/frost_SN18700_2025-04.json  (raw data, as Frost sends it)
+  data/raw/weather/weather_hourly_raw.csv      (all observations in one table, UTC)
 """
 import json
 import os
@@ -17,8 +17,8 @@ from config import FROST_ELEMENTS, FROST_STATION, ROOT, WEATHER_DIR
 
 FROST_URL = "https://frost.met.no/observations/v0.jsonld"
 
-# Frost bruker UTC. 1. april 00:00 norsk tid = 31. mars 22:00 UTC.
-# Vi henter litt ekstra i hver ende og kutter til riktig periode senere.
+# Frost uses UTC. 1 April 00:00 Norwegian time = 31 March 22:00 UTC.
+# We get a little extra at each end and cut to the right period later.
 MONTHS_UTC = [
     ("2025-03-31T00:00:00Z", "2025-05-01T00:00:00Z", "2025-04"),
     ("2025-05-01T00:00:00Z", "2025-06-01T00:00:00Z", "2025-05"),
@@ -38,7 +38,7 @@ def fetch_month(client_id, start, end):
     }
     response = requests.get(FROST_URL, params=params, auth=(client_id, ""), timeout=120)
     if response.status_code != 200:
-        print(f"Feil fra Frost ({response.status_code}): {response.text[:500]}")
+        print(f"Error from Frost ({response.status_code}): {response.text[:500]}")
         response.raise_for_status()
     return response.json()
 
@@ -63,7 +63,7 @@ def main():
     load_dotenv(ROOT / ".env")
     client_id = os.getenv("FROST_CLIENT_ID")
     if not client_id:
-        sys.exit("Fant ikke FROST_CLIENT_ID. Lag en .env-fil i prosjektmappa (se .env.example).")
+        sys.exit("FROST_CLIENT_ID not found. Create a .env file in the project folder (see .env.example).")
 
     WEATHER_DIR.mkdir(parents=True, exist_ok=True)
     all_rows = []
@@ -71,9 +71,9 @@ def main():
         raw_file = WEATHER_DIR / f"frost_{FROST_STATION}_{label}.json"
         if raw_file.exists():
             payload = json.loads(raw_file.read_text())
-            print(f"Finnes allerede: {raw_file.name}")
+            print(f"Already exists: {raw_file.name}")
         else:
-            print(f"Henter vær for {label} ...")
+            print(f"Getting weather for {label} ...")
             payload = fetch_month(client_id, start, end)
             raw_file.write_text(json.dumps(payload))
         all_rows.extend(to_rows(payload))
@@ -81,7 +81,7 @@ def main():
     df = pd.DataFrame(all_rows)
     out = WEATHER_DIR / "weather_hourly_raw.csv"
     df.to_csv(out, index=False)
-    print(f"Lagret {len(df):,} observasjoner i {out.name}")
+    print(f"Saved {len(df):,} observations to {out.name}")
     print(df.groupby(["element", "time_resolution"]).size().to_string())
 
 
