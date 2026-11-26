@@ -3,3 +3,14 @@ data/
 __pycache__/
 .ipynb_checkpoints/
 .DS_Store
+# Hemmeligheter
+.env
+
+# Data (for store for GitHub – lastes ned med skriptene)
+data/raw/**
+data/processed/**
+!data/**/.gitkeep
+
+__pycache__/
+.ipynb_checkpoints/
+.DS_Store

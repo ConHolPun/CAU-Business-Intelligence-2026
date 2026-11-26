@@ -6,3 +6,7 @@ requests
 holidays
 python-dotenv
 streamlit
+pandas>=2.0
+pyarrow
+requests
+python-dotenv
